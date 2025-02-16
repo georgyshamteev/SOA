@@ -1,0 +1,103 @@
+@startuml
+entity "User" {
+  *user_id : UUID [PK]
+  --
+  *username : VARCHAR(50)
+  *email : VARCHAR(100)
+  *password_hash : VARCHAR(255)
+  *created_at : TIMESTAMP
+  *updated_at : TIMESTAMP
+}
+
+entity "UserProfile" {
+  *profile_id : UUID [PK]
+  --
+  *user_id : UUID [FK]
+  *first_name : VARCHAR(50)
+  *last_name : VARCHAR(50)
+  *birthdate : DATE
+  *bio : TEXT
+}
+
+entity "UserRelations" {
+  *user_id : UUID [PK, FK]
+  *related_user_id : UUID [PK, FK]
+  --
+  *relation_type : VARCHAR(20) // friends, subscribed, blocked
+  *relation_status : VARCHAR(20) // active, removed
+  *started_at : TIMESTAMP
+  *updated_at : TIMESTAMP
+  *notes : TEXT
+}
+
+User ||--o{ UserRelations : "has relationships"
+User ||--o{ UserRelations : "is related to"
+User ||--|| UserProfile : "has"
+
+entity "Post" {
+  *post_id : UUID [PK]
+  --
+  *user_id : UUID [FK]
+  *content : TEXT
+  *created_at : TIMESTAMP
+  *updated_at : TIMESTAMP
+  *visibility : VARCHAR(20)
+}
+
+entity "Comment" {
+  *comment_id : UUID [PK]
+  --
+  *post_id : UUID [FK]
+  *user_id : UUID [FK]
+  *content : TEXT
+  *created_at : TIMESTAMP
+  *updated_at : TIMESTAMP
+  *reply_to_id : UUID [FK]
+}
+
+entity "Media" {
+  *media_id : UUID [PK]
+  --
+  *post_id : UUID [FK]
+  *media_type : VARCHAR(50)
+  *url : TEXT
+  *uploaded_at : TIMESTAMP
+}
+
+User ||--o{ Post : "creates"
+Post ||--o{ Comment : "has"
+Post ||--o{ Media : "includes"
+
+
+entity "PostStats" {
+  *post_id : UUID [PK]
+  --
+  *views_count : INTEGER
+  *likes_count : INTEGER
+  *comments_count : INTEGER
+  *last_updated : TIMESTAMP
+}
+
+entity "UserActivity" {
+  *activity_id : UUID [PK]
+  --
+  *user_id : UUID [FK]
+  *post_id : UUID [FK]
+  *activity_type : VARCHAR(50)
+  *activity_timestamp : TIMESTAMP
+}
+
+entity "UserStats" {
+  *user_id : UUID [PK]
+  --
+  *total_posts : INTEGER
+  *total_likes_received : INTEGER
+  *total_comments_received : INTEGER
+  *total_views : INTEGER
+  *last_active_at : TIMESTAMP
+}
+
+Post ||--|| PostStats : "has"
+User ||--o{ UserActivity : "performs"
+User ||--|| UserStats : "aggregates"
+@enduml
