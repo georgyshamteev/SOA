@@ -29,7 +29,7 @@ model {
 
         }
 
-        container StatsService "Statistics Service" "Counts likes, views, and comments" {
+        container StatisticsService "Statistics Service" "Counts likes, views, and comments" {
 
         }
 
@@ -70,13 +70,13 @@ model {
 
     APIGateway -> UserService "For user-related operations"
     APIGateway -> PostService "For post and comment operations"
-    APIGateway -> StatsService "Fetches statistics"
+    APIGateway -> StatisticsService "Fetches statistics"
 
     PostService -> MessageBroker "Publishes events (views, likes, comments)"
-    StatsService -> MessageBroker "Subscribes to events - fetches info"
+    StatisticsService -> MessageBroker "Subscribes to events - fetches info"
 
     UserService -> UserDB "Stores and retrieves user data"
     PostService -> PostDB "Stores and retrieves posts and comments"
-    StatsService -> StatsDB "Stores and retrieves statistics"
+    StatisticsService -> StatsDB "Stores and retrieves statistics"
 
 }
