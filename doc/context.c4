@@ -1,0 +1,82 @@
+specification {
+    element system
+    element container
+    element database
+    element person {
+        style {
+            shape person
+            color green
+        }
+    }
+    element component
+}
+
+model {
+    person User "User" "Interacts with the social network"
+
+    system SocialNetwork "Social Network" {
+        container APIGateway "API Gateway" "Manages all incoming requests from the UI" {
+            style {
+                color indigo
+            }
+        }
+
+        container UserService "User Service" "Handles user registration, authentication, and stores user information and roles" {
+
+        }
+
+        container PostService "Post & Comment Service" "Manages creation, updating, deletion of posts and comments" {
+
+        }
+
+        container StatisticsService "Statistics Service" "Counts likes, views, and comments" {
+
+        }
+
+        container MessageBroker "Kafka" "Stores views/likes/comments going to stats service" {
+            technology "Message Broker"
+            style {
+                color amber
+                shape queue
+            }
+        }
+    
+        database UserDB "PostgreSQL" "Stores user data" {
+            technology "Database"
+            style {
+                color red
+                shape cylinder
+            }
+        }
+    
+        database PostDB "PostgreSQL or Cassandra" "Stores posts and comments" {
+            technology "Database"
+            style {
+                color red
+                shape cylinder
+            }
+        }
+
+        database StatsDB "ClickHouse" "Stores statistics data" {
+            technology "Database"
+            style {
+                color red
+                shape cylinder
+            }
+        }
+    }
+
+    User -> APIGateway "Interacts with"
+
+    APIGateway -> UserService "For user-related operations"
+    APIGateway -> PostService "For post and comment operations"
+    APIGateway -> StatisticsService "Fetches statistics"
+
+    PostService -> MessageBroker "Publishes events (views, likes, comments)"
+    StatisticsService -> MessageBroker "Subscribes to events - fetches info"
+
+    UserService -> UserDB "Stores and retrieves user data"
+    PostService -> PostDB "Stores and retrieves posts and comments"
+    StatisticsService -> StatsDB "Stores and retrieves statistics"
+
+}
