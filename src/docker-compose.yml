@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  userservice_db:
+    image: postgres:latest
+    container_name: userservice_postgres
+    environment:
+      POSTGRES_USER: userservice
+      POSTGRES_PASSWORD: userservicepass
+      POSTGRES_DB: userservicedb
+    ports:
+      - "5432:5432"
+    networks:
+      - user_service_network
+
+  userservice:
+    build: ./UserService/service
+    depends_on:
+         - userservice_db
+    ports:
+      - "5001:5001"
+    networks:
+      - my_network
+
+  proxyservice:
+    build: ./ProxyService
+    ports:
+      - "5000:5000"
+    networks:
+      - proxy_network
+      - user_service_network
+
+networks:
+  user_service_network:
+    driver: bridge
+  proxy_network:
+    driver: bridge
