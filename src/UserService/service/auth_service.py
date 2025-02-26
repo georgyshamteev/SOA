@@ -1,10 +1,10 @@
 import argparse
 from flask import Flask, request, jsonify, make_response
-from werkzeug.security import check_password_hash
 import jwt
 import datetime
 from models import User, db
 from flask_sqlalchemy import SQLAlchemy
+import sys
 
 auth_service = Flask("auth_service")
 auth_service.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://userservice:userservicepass@userservice_db:5432/userservicedb'
@@ -35,12 +35,12 @@ def signup():
     data = request.get_json(force=True)
     username = data.get("username")
     password = data.get("password")
+    email = data.get("email")
 
     if User.query.filter_by(username=username).first():
         return jsonify({"message": "User already exists"}), 403
 
-    new_user = User(username=username)
-    new_user.set_password(password)
+    new_user = User.new_user(username, password, email)
 
     db.session.add(new_user)
     db.session.commit()
@@ -72,6 +72,7 @@ def login():
     )
     response = make_response(jsonify({"message": "Login successful"}), 200)
     response.set_cookie("jwt", token)
+
     return response
 
 @auth_service.route("/user/whoami", methods=["GET"])
@@ -104,6 +105,7 @@ if __name__ == "__main__":
         exit(0)
 
     with auth_service.app_context():
+        db.drop_all()
         db.create_all()
 
     print(f"Сервер запущен на порту: {args.port}")

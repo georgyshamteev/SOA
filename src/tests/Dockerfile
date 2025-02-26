@@ -9,4 +9,4 @@ COPY . .
 
 RUN chmod +x ./wait-for-it.sh
 
-ENTRYPOINT ["./wait-for-it.sh", "proxyservice:5000", "--", "pytest", "-vs", "--log-level=INFO"]
+ENTRYPOINT ["./wait-for-it.sh", "proxyservice:5000", "--", "pytest", "-vs", "--log-level=INFO", "-W", "ignore::DeprecationWarning"]

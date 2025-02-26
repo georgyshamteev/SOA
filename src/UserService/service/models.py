@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import create_engine, Column, String, ForeignKey, Date, Text, TIMESTAMP
 from sqlalchemy.orm import relationship, sessionmaker
-
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -20,6 +20,16 @@ class User(db.Model):
 
     profile = relationship('UserProfile', uselist=False, back_populates='user')
     relations = relationship('UserRelations', foreign_keys='UserRelations.user_id', back_populates='user')
+
+    def new_user(log, pwd, email):
+        user = User()
+        user.username = log
+        user.password_hash = generate_password_hash(pwd)
+        user.email = email
+        return user
+
+    def check_password(self, pwd):
+        return check_password_hash(self.password_hash, pwd)
 
 class UserProfile(db.Model):
     __tablename__ = 'user_profile'

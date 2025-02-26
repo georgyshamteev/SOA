@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, jsonify, make_response, Response
 import requests
 
 app = Flask("proxy_service")
@@ -39,7 +39,7 @@ def proxy_request(service_prefix):
         current_user = current_user_or_error
 
     url = f"{service_url}{request.path}"
-    response = requests.request(
+    res = requests.request(
         method=request.method,
         url=url,
         headers={key: value for (key, value) in request.headers if key != 'Host'},
@@ -47,9 +47,8 @@ def proxy_request(service_prefix):
         cookies=request.cookies,
         allow_redirects=False)
     
-    resp = jsonify(response.json() if response.content else {})
-    resp.status_code = response.status_code
-    return resp
+    response = Response(res.content, res.status_code, res.raw.headers)
+    return response
 
 ########################## User service routes ##########################
 @app.route('/user/signup', methods=['POST'])
