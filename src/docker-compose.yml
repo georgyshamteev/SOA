@@ -8,6 +8,8 @@ services:
       POSTGRES_USER: userservice
       POSTGRES_PASSWORD: userservicepass
       POSTGRES_DB: userservicedb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
@@ -20,18 +22,31 @@ services:
     ports:
       - "5001:5001"
     networks:
-      - my_network
+      - proxy_network
+      - user_service_network
 
   proxyservice:
-    build: ./ProxyService
+    build: ./APIGateway
     ports:
       - "5000:5000"
     networks:
       - proxy_network
       - user_service_network
+    depends_on:
+      - userservice
+
+  tests:
+    build: ./tests
+    networks:
+      - proxy_network
+    depends_on:
+      - proxyservice
 
 networks:
   user_service_network:
     driver: bridge
   proxy_network:
     driver: bridge
+
+volumes:
+  postgres_data:

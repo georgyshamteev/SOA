@@ -4,7 +4,7 @@ import requests
 app = Flask("proxy_service")
 
 SERVICES = {
-    "user": "http://localhost:5001",
+    "user": "http://userservice:5001",
     "posts": "http://localhost:5002",
     "stats": "http://localhost:5003"
 }
@@ -26,6 +26,7 @@ def get_user_from_token(request):
 
 def proxy_request(service_prefix):
     service_url = SERVICES.get(service_prefix)
+    
     if not service_url:
         return jsonify({"error": "Service not found"}), 404
 
@@ -58,7 +59,7 @@ def handle_user_request():
     return proxy_request("user")
 
 ########################## Posts service routes #########################
-@app.route('posts/...', methods=['...'])
+@app.route('/posts/...', methods=['...'])
 def handle_posts_request():
     return proxy_request("posts")
 
@@ -69,4 +70,4 @@ def handle_stats_request(user_id=None):
 
 
 if __name__ == '__main__':
-    app.run(port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)

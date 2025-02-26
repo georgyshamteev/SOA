@@ -1,10 +1,13 @@
 FROM python:3.12
 
-WORKDIR /practice-security/auth
+WORKDIR /UserService/service/
 
-COPY auth_service.py /practice-security/auth/
-COPY requirements.txt /practice-security/auth/
+COPY requirements.txt /UserService/service/
 
 RUN pip install -r requirements.txt
 
-ENTRYPOINT ["python", "auth_service.py"]
+COPY . .
+
+RUN chmod +x ./wait-for-it.sh
+
+ENTRYPOINT ["./wait-for-it.sh", "postgresql:5432", "--", "python", "auth_service.py", "--private", "./signature.pem", "--public", "signature.pub"]

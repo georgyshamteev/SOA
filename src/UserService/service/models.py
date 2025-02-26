@@ -1,13 +1,14 @@
 import uuid
 from datetime import datetime
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine, Column, String, ForeignKey, Date, Text, TIMESTAMP
 from sqlalchemy.orm import relationship, sessionmaker
 
-Base = declarative_base()
+from flask_sqlalchemy import SQLAlchemy
 
-class User(Base):
+db = SQLAlchemy()
+
+class User(db.Model):
     __tablename__ = 'user'
 
     user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -20,7 +21,7 @@ class User(Base):
     profile = relationship('UserProfile', uselist=False, back_populates='user')
     relations = relationship('UserRelations', foreign_keys='UserRelations.user_id', back_populates='user')
 
-class UserProfile(Base):
+class UserProfile(db.Model):
     __tablename__ = 'user_profile'
 
     profile_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -33,7 +34,7 @@ class UserProfile(Base):
 
     user = relationship('User', back_populates='profile')
 
-class UserRelations(Base):
+class UserRelations(db.Model):
     __tablename__ = 'user_relations'
 
     user_id = Column(UUID(as_uuid=True), ForeignKey('user.user_id'), primary_key=True)
@@ -46,10 +47,3 @@ class UserRelations(Base):
 
     user = relationship('User', foreign_keys=[user_id], back_populates='relations')
     related_user = relationship('User', foreign_keys=[related_user_id])
-
-# Создание экземпляра engine и инициализация базы данных
-engine = create_engine('postgresql://userservice:userservicepass@localhost:5432/userservicedb')
-Base.metadata.create_all(engine)
-
-# Создание фабрики сессий
-Session = sessionmaker(bind=engine)

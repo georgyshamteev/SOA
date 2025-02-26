@@ -3,11 +3,11 @@ from flask import Flask, request, jsonify, make_response
 from werkzeug.security import check_password_hash
 import jwt
 import datetime
-from models import db, User
+from models import User, db
+from flask_sqlalchemy import SQLAlchemy
 
-auth_service = Flask(name)
-
-auth_service.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://userservice:userservicepass@localhost:5432/userservicedb'
+auth_service = Flask("auth_service")
+auth_service.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://userservice:userservicepass@userservice_db:5432/userservicedb'
 auth_service.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(auth_service)
@@ -30,7 +30,7 @@ def get_user_from_token(request):
         return jsonify({"message": "Invalid token"}), 400
     return current_user.username, 200
 
-@auth_service.route("/signup", methods=["POST"])
+@auth_service.route("/user/signup", methods=["POST"])
 def signup():
     data = request.get_json(force=True)
     username = data.get("username")
@@ -54,7 +54,7 @@ def signup():
     response.set_cookie("jwt", token)
     return response
 
-@auth_service.route("/login", methods=["POST"])
+@auth_service.route("/user/login", methods=["POST"])
 def login():
     data = request.get_json(force=True)
     username = data.get("username")
@@ -74,7 +74,7 @@ def login():
     response.set_cookie("jwt", token)
     return response
 
-@auth_service.route("/whoami", methods=["GET"])
+@auth_service.route("/user/whoami", methods=["GET"])
 def whoami():
     current_user_or_error, code = get_user_from_token(request)
 
@@ -85,7 +85,7 @@ def whoami():
 
     return f"Hello, {current_user}", 200
 
-if name == "main":
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Сервис авторизации")
 
     parser.add_argument("--private", required=True, help="Путь до приватного ключа")
