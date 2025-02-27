@@ -46,3 +46,29 @@ def test_login_and_access_resource():
     whoami_response = requests.get(f"{BASE_URL}/user/whoami", cookies=cookies)
     assert whoami_response.status_code == 200
     assert "Hello, accessuser" in whoami_response.text
+
+def test_login_update_and_get_profile():
+    signup_response = requests.post(f"{BASE_URL}/user/signup", json={"username": "gooduser", "password": "pass", "email": "good@ya.ru"})
+    assert signup_response.status_code == 200
+
+    login_response = requests.post(f"{BASE_URL}/user/login", json={"username": "gooduser", "password": "pass"})
+    assert login_response.status_code == 200
+
+    cookies = login_response.cookies
+    update_response = requests.put(f"{BASE_URL}/user/change_profile", json={
+        "name" : "John",
+        "surname" : "Green",
+        "birthdate" : "27.09.2004",
+        "phone" : "88005553535",
+        "bio" : "Проще позвонить чем у кого-то занимать"
+    }, cookies=cookies)
+    assert update_response.status_code == 200
+
+    profile_response = requests.get(f"{BASE_URL}/user/myprofile", cookies=cookies)
+    assert profile_response.status_code == 200
+    profile = profile_response.json()
+    assert profile["name"] == "John"
+    assert profile["surname"] == "Green"
+    assert profile["phone"] == "88005553535"
+    assert profile["bio"] == "Проще позвонить чем у кого-то занимать"
+    assert profile["birthdate"] == "27.09.2004"

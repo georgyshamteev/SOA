@@ -16,7 +16,7 @@ services:
       - user_service_network
 
   userservice:
-    build: ./UserService/service
+    build: ./UserService
     depends_on:
          - userservice_db
     ports:

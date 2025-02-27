@@ -51,6 +51,8 @@ def proxy_request(service_prefix):
     return response
 
 ########################## User service routes ##########################
+@app.route('/user/change_profile', methods=['PUT'])
+@app.route('/user/myprofile', methods=['GET'])
 @app.route('/user/signup', methods=['POST'])
 @app.route('/user/login', methods=['POST'])
 @app.route('/user/whoami', methods=['GET'])

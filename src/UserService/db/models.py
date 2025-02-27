@@ -30,6 +30,11 @@ class User(db.Model):
 
     def check_password(self, pwd):
         return check_password_hash(self.password_hash, pwd)
+    
+    def update(self, session, email = None):
+        if email:
+            self.email = email
+        session.commit()
 
 class UserProfile(db.Model):
     __tablename__ = 'user_profile'
@@ -43,6 +48,23 @@ class UserProfile(db.Model):
     phone_number = Column(String(20), nullable=True)
 
     user = relationship('User', back_populates='profile')
+
+    def update(self, session, name = None, surname = None, birthdate = None, bio = None, phone = None):
+        if name:
+            self.first_name = name
+        if surname:
+            self.last_name = surname
+        if birthdate:
+            self.birthdate = birthdate
+        if bio:
+            self.bio = bio
+        if phone:
+            self.phone_number = phone
+
+        if self not in session:
+            session.add(self)
+
+        session.commit()
 
 class UserRelations(db.Model):
     __tablename__ = 'user_relations'
