@@ -1,0 +1,150 @@
+openapi: 3.0.0
+info:
+  title: Social Network Service API
+  description: API for Social Network.
+  version: 1.0.0
+
+servers:
+  - url: http://proxyservice:5000
+
+paths:
+  /user/signup:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                email:
+                  type: string
+              required:
+                - username
+                - password
+                - email
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: User already exists
+
+  /user/login:
+    post:
+      summary: Log in a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '403':
+          description: Invalid username or password
+
+  /user/change_profile:
+    put:
+      summary: Update user's profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                surname:
+                  type: string
+                email:
+                  type: string
+                birthdate:
+                  type: string
+                phone:
+                  type: string
+                bio:
+                  type: string
+              required:
+                - name
+                - surname
+      responses:
+        '200':
+          description: Update successful
+        '400':
+          description: No name or surname / Invalid date format / No such user
+        '401':
+          description: "Unauthorized: Missing token / Token has expired"
+        '403':
+          description: Invalid token
+
+  /user/myprofile:
+    get:
+      summary: Get the current user's profile
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  surname:
+                    type: string
+                  birthdate:
+                    type: string
+                  phone:
+                    type: string
+                  bio:
+                    type: string
+        '400':
+          description: No such user
+        '401':
+          description: "Unauthorized: Missing token / Token has expired"
+        '403':
+          description: Invalid token
+        '404':
+          description: No profile
+
+  /user/whoami:
+    get:
+      summary: Return the current user's username
+      responses:
+        '200':
+          description: Returns the current username
+        '400':
+          description: No such user
+        '401':
+          description: "Unauthorized: Missing token / Token has expired"
+        '403':
+          description: Invalid token

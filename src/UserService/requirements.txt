@@ -1,0 +1,6 @@
+Flask==2.3.2
+Werkzeug
+PyJWT==2.7.0
+cryptography
+flask-sqlalchemy
+psycopg2-binary
