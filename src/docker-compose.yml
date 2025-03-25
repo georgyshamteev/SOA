@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  userservice_db:
+    image: postgres:latest
+    container_name: userservice_postgres
+    environment:
+      POSTGRES_USER: userservice
+      POSTGRES_PASSWORD: userservicepass
+      POSTGRES_DB: userservicedb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - user_service_network
+
+  userservice:
+    build: ./UserService
+    depends_on:
+         - userservice_db
+    ports:
+      - "5001:5001"
+    networks:
+      - proxy_network
+      - user_service_network
+
+  proxyservice:
+    build: ./APIGateway
+    ports:
+      - "5000:5000"
+    networks:
+      - proxy_network
+      - user_service_network
+    depends_on:
+      - userservice
+
+  tests:
+    build: ./tests
+    networks:
+      - proxy_network
+    depends_on:
+      - proxyservice
+
+networks:
+  user_service_network:
+    driver: bridge
+  proxy_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
