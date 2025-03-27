@@ -2,6 +2,9 @@ import requests
 import pytest
 import warnings
 import sys
+import json
+import random
+import string
 
 warnings.filterwarnings('ignore')
 
@@ -72,3 +75,113 @@ def test_login_update_and_get_profile():
     assert profile["phone"] == "88005553535"
     assert profile["bio"] == "Проще позвонить чем у кого-то занимать"
     assert profile["birthdate"] == "27.09.2004"
+
+def random_string(length=8):
+    return ''.join(random.choices(string.ascii_letters, k=length))
+
+def get_cookie(user):
+    try:
+        signup_response = requests.post(f"{BASE_URL}/user/signup", json={"username": user, "password": "accesspass", "email": user + "@ya.ru"})
+    except:
+        print("user already exists")
+    login_response = requests.post(f"{BASE_URL}/user/login", json={"username": user, "password": "accesspass"})
+
+    return login_response.cookies
+
+def test_create_post():
+    post_data = {
+        "title": f"Test Post {random_string()}",
+        "description": "This is a test post description",
+        "is_private": False,
+        "tags": ["test", "pytest"]
+    }
+    
+    response = requests.post(f"{BASE_URL}/posts", json=post_data, cookies=get_cookie("user1"))
+    assert response.status_code == 201
+    data = response.json()
+    assert data["title"] == post_data["title"]
+    assert data["description"] == post_data["description"]
+    assert set(data["tags"]) == set(post_data["tags"])
+    return data["id"]
+
+def test_get_post():
+    post_id = test_create_post()
+    response = requests.get(f"{BASE_URL}/posts/{post_id}", cookies=get_cookie("user1"))
+    assert response.status_code == 200
+    data = response.json()
+    assert "title" in data
+    assert "description" in data
+    assert "tags" in data
+
+def test_update_post():
+    post_id = test_create_post()
+    update_data = {
+        "title": f"Updated Post {random_string()}",
+        "description": "This post has been updated",
+        "is_private": True,
+        "tags": ["updated", "test"]
+    }
+    
+    response = requests.put(f"{BASE_URL}/posts/{post_id}", json=update_data, cookies=get_cookie("user1"))
+    assert response.status_code == 200
+    data = response.json()
+    assert data["title"] == update_data["title"]
+    assert data["description"] == update_data["description"]
+    assert set(data["tags"]) == set(update_data["tags"])
+
+def test_delete_post():
+    post_id = test_create_post()
+    response = requests.delete(f"{BASE_URL}/posts/{post_id}", cookies=get_cookie("user1"))
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] == True
+    
+    response = requests.get(f"{BASE_URL}/posts/{post_id}", cookies=get_cookie("user1"))
+    assert response.status_code != 200
+
+def test_list_posts():
+    for _ in range(3):
+        test_create_post()
+    
+    response = requests.get(f"{BASE_URL}/posts?page=1&page_size=10", cookies=get_cookie("user1"))
+    assert response.status_code == 200
+    data = response.json()
+    assert "posts" in data
+    assert "total" in data
+    assert "page" in data
+    assert "pages" in data
+    assert len(data["posts"]) > 0
+
+def test_private_post_visibility():
+    post_data = {
+        "title": f"Private Post {random_string()}",
+        "description": "This is a private post",
+        "is_private": True,
+        "tags": ["private", "test"]
+    }
+    
+    response = requests.post(f"{BASE_URL}/posts", json=post_data, cookies=get_cookie("user1"))
+    post_id = response.json()["id"]
+    
+    response = requests.get(f"{BASE_URL}/posts/{post_id}", cookies=get_cookie("user1"))
+    assert response.status_code == 200
+    
+    response = requests.get(f"{BASE_URL}/posts/{post_id}", cookies=get_cookie("user2"))
+    assert response.status_code != 200
+
+def test_filter_by_tag():
+    tag = f"unique_tag_{random_string()}"
+    post_data = {
+        "title": f"Tagged Post {random_string()}",
+        "description": "This post has a unique tag",
+        "tags": [tag]
+    }
+    
+    requests.post(f"{BASE_URL}/posts", json=post_data, cookies=get_cookie("user1"))
+    
+    response = requests.get(f"{BASE_URL}/posts?tag={tag}", cookies=get_cookie("user1"))
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["posts"]) >= 1
+    assert any(tag in post["tags"] for post in data["posts"])
+

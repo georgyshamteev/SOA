@@ -3,3 +3,5 @@ Werkzeug
 PyJWT==2.7.0
 cryptography
 requests
+grpcio
+grpcio-tools
