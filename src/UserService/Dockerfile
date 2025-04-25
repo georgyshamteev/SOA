@@ -1,4 +1,4 @@
-FROM python:3.12
+FROM python:3.10
 
 WORKDIR /UserService/
 
@@ -7,8 +7,6 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY . .
-
-COPY ../Broker/kafka_producer.py .
 
 RUN chmod +x utils/wait-for-it.sh
 

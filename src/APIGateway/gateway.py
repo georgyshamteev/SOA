@@ -53,7 +53,8 @@ def proxy_request(service_prefix):
         cookies=request.cookies,
         allow_redirects=False)
 
-    response = Response(res.content, res.status_code, res.raw.headers)
+    headers = [(name, value) for name, value in res.headers.items()]
+    response = Response(res.content, res.status_code, headers)
     return response
 
 ########################## User service routes ##########################
@@ -101,7 +102,7 @@ def handle_post_request(post_id=None):
                 page=page, page_size=page_size, username=username, tag=tag
             ))
             for post in response.posts:
-                send_view_event(username, post)
+                send_view_event(username, post.id)
             return jsonify({
                 'posts': [post_to_dict(post) for post in response.posts],
                 'total': response.total,
@@ -161,7 +162,7 @@ def handle_like_request(post_id=None):
     if request.method == 'POST':
         send_like_event(username, post_id)
 
-    return 200
+    return jsonify({"message": "Success"}), 200
 
 @app.route('/comment/<post_id>', methods=['GET', 'POST'])
 def handle_comment_request(post_id=None):
@@ -173,7 +174,7 @@ def handle_comment_request(post_id=None):
     if request.method == 'POST':
         send_comment_event(username, post_id, "comment_id_placeholder")
 
-    return 200
+    return jsonify({"message": "Success"}), 200
 
 
 ########################## Stats service routes #########################

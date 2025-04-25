@@ -1,4 +1,4 @@
-FROM python:3.12
+FROM python:3.10
 
 WORKDIR /APIGateway/
 
@@ -7,8 +7,6 @@ COPY requirements.txt /APIGateway/
 RUN pip install -r requirements.txt
 
 COPY . .
-
-COPY ../Broker/kafka_producer.py .
 
 RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. proto/post.proto
 

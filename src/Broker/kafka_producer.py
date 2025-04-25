@@ -5,10 +5,10 @@ from kafka import KafkaProducer
 # Создание продюсера
 def get_kafka_producer():
     return KafkaProducer(
-        bootstrap_servers=['kafka:9092'],  # для сервисов внутри Docker
-        # или bootstrap_servers=['localhost:9092'], # для локальной разработки
+        bootstrap_servers=['kafka:29092'],  # Для сервисов внутри Docker-сети
         value_serializer=lambda v: json.dumps(v).encode('utf-8')
     )
+
 
 producer = get_kafka_producer()
 
