@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: userservicepass
       POSTGRES_DB: userservicedb
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - userservice_postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
@@ -18,12 +18,44 @@ services:
   userservice:
     build: ./UserService
     depends_on:
-         - userservice_db
+      - userservice_db
     ports:
       - "5001:5001"
     networks:
       - proxy_network
       - user_service_network
+  
+  postservice_db:
+    image: postgres:latest
+    container_name: postservice_postgres
+    environment:
+      POSTGRES_USER: postservice
+      POSTGRES_PASSWORD: postservicepass
+      POSTGRES_DB: postservicedb
+    volumes:
+      - postservice_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - post_service_network
+
+  post_service:
+    build: ./PostService
+    depends_on:
+      - postservice_db
+    environment:
+      - DATABASE_USER=postservice
+      - DATABASE_PASSWORD=postservicepass
+      - DATABASE_HOST=postservice_db
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=postservicedb
+      - GRPC_HOST=0.0.0.0
+      - GRPC_PORT=50051
+    ports:
+      - "50051:50051"
+    networks:
+      - proxy_network
+      - post_service_network
 
   proxyservice:
     build: ./APIGateway
@@ -32,6 +64,7 @@ services:
     networks:
       - proxy_network
       - user_service_network
+      - post_service_network
     depends_on:
       - userservice
 
@@ -43,10 +76,13 @@ services:
       - proxyservice
 
 networks:
+  post_service_network:
+    driver: bridge
   user_service_network:
     driver: bridge
   proxy_network:
     driver: bridge
 
 volumes:
-  postgres_data:
+  userservice_postgres_data:
+  postservice_postgres_data:
