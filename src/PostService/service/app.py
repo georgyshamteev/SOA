@@ -11,15 +11,15 @@ from sqlalchemy.exc import SQLAlchemyError
 
 import logging
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# logging.basicConfig(
+#     level=logging.DEBUG,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# )
 
-logging.getLogger('grpc').setLevel(logging.DEBUG)
+# logging.getLogger('grpc').setLevel(logging.DEBUG)
 
-logging.getLogger('sqlalchemy').setLevel(logging.DEBUG)
-logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
+# logging.getLogger('sqlalchemy').setLevel(logging.DEBUG)
+# logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
 
 
 class PostServicer(post_pb2_grpc.PostServiceServicer):
