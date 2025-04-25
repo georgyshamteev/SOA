@@ -8,6 +8,8 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
+COPY ../Broker/kafka_producer.py .
+
 RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. proto/post.proto
 
 RUN chmod +x ./wait-for-it.sh

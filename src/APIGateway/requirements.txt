@@ -5,3 +5,4 @@ cryptography
 requests
 grpcio
 grpcio-tools
+kafka-python==2.0.2

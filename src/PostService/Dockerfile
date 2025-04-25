@@ -7,6 +7,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+COPY ../Broker/kafka_producer.py .
+
 RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. proto/post.proto
 
 EXPOSE 50051

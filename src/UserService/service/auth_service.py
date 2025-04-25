@@ -4,6 +4,7 @@ import jwt
 import datetime
 from db.models import User, UserProfile, db
 from flask_sqlalchemy import SQLAlchemy
+from kafka_producer import send_registration_event
 import sys
 
 auth_service = Flask("auth_service")
@@ -52,6 +53,9 @@ def signup():
     )
     response = make_response(jsonify({"message": "User registered successfully"}), 200)
     response.set_cookie("jwt", token)
+
+    send_registration_event(username)
+
     return response
 
 @auth_service.route("/user/login", methods=["POST"])

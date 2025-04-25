@@ -4,3 +4,4 @@ PyJWT==2.7.0
 cryptography
 flask-sqlalchemy
 psycopg2-binary
+kafka-python==2.0.2

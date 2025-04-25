@@ -3,6 +3,7 @@ import requests
 import jwt
 import grpc
 from proto import post_pb2, post_pb2_grpc
+from kafka_producer import send_like_event, send_view_event, send_comment_event
 
 app = Flask("proxy_service")
 
@@ -31,7 +32,7 @@ def get_user_from_token(request):
 
 def proxy_request(service_prefix):
     service_url = SERVICES.get(service_prefix)
-    
+
     if not service_url:
         return jsonify({"error": "Service not found"}), 404
 
@@ -40,7 +41,7 @@ def proxy_request(service_prefix):
 
         if code != 200:
             return make_response(current_user_or_error, code)
-        
+
         current_user = current_user_or_error
 
     url = f"{service_url}{request.path}"
@@ -51,7 +52,7 @@ def proxy_request(service_prefix):
         data=request.get_data(),
         cookies=request.cookies,
         allow_redirects=False)
-    
+
     response = Response(res.content, res.status_code, res.raw.headers)
     return response
 
@@ -90,7 +91,7 @@ def handle_post_request(post_id=None):
         if code != 200:
             return make_response(current_user_or_error, code)
         username = current_user_or_error
-        
+
         # GET list
         if request.method == 'GET' and not post_id:
             page = request.args.get('page', 1, type=int)
@@ -99,20 +100,22 @@ def handle_post_request(post_id=None):
             response = client.ListPosts(post_pb2.ListPostsRequest(
                 page=page, page_size=page_size, username=username, tag=tag
             ))
+            for post in response.posts:
+                send_view_event(username, post)
             return jsonify({
                 'posts': [post_to_dict(post) for post in response.posts],
                 'total': response.total,
                 'page': response.page,
                 'pages': response.pages
             })
-        
+
         # GET one
         elif request.method == 'GET':
             response = client.GetPost(post_pb2.GetPostRequest(
                 post_id=int(post_id), username=username
             ))
             return jsonify(post_to_dict(response.post))
-        
+
         # POST - create
         elif request.method == 'POST':
             data = request.json
@@ -124,7 +127,7 @@ def handle_post_request(post_id=None):
                 tags=data.get('tags', [])
             ))
             return jsonify(post_to_dict(response.post)), 201
-        
+
         # PUT - update
         elif request.method == 'PUT':
             data = request.json
@@ -137,7 +140,7 @@ def handle_post_request(post_id=None):
                 tags=data.get('tags', [])
             ))
             return jsonify(post_to_dict(response.post))
-        
+
         # DELETE
         elif request.method == 'DELETE':
             response = client.DeletePost(post_pb2.DeletePostRequest(
@@ -146,6 +149,32 @@ def handle_post_request(post_id=None):
             return jsonify({'success': response.success, 'message': response.message})
     except:
         return jsonify({"message": "Error in rpc"}), 400
+
+
+@app.route('/like/<post_id>', methods=['GET', 'POST'])
+def handle_like_request(post_id=None):
+    current_user_or_error, code = get_user_from_token(request)
+    if code != 200:
+        return make_response(current_user_or_error, code)
+    username = current_user_or_error
+
+    if request.method == 'POST':
+        send_like_event(username, post_id)
+
+    return 200
+
+@app.route('/comment/<post_id>', methods=['GET', 'POST'])
+def handle_comment_request(post_id=None):
+    current_user_or_error, code = get_user_from_token(request)
+    if code != 200:
+        return make_response(current_user_or_error, code)
+    username = current_user_or_error
+
+    if request.method == 'POST':
+        send_comment_event(username, post_id, "comment_id_placeholder")
+
+    return 200
+
 
 ########################## Stats service routes #########################
 @app.route('/stats/...', methods=['...'])
