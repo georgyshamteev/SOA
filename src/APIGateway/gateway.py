@@ -115,6 +115,7 @@ def handle_post_request(post_id=None):
             response = client.GetPost(post_pb2.GetPostRequest(
                 post_id=int(post_id), username=username
             ))
+            send_view_event(username, response.post.id)
             return jsonify(post_to_dict(response.post))
 
         # POST - create
@@ -178,9 +179,73 @@ def handle_comment_request(post_id=None):
 
 
 ########################## Stats service routes #########################
-@app.route('/stats/...', methods=['...'])
-def handle_stats_request(username=None):
-    return proxy_request("stats")
+from statistics_client import (
+    get_post_stats, get_view_dynamics, get_like_dynamics, 
+    get_comment_dynamics, get_top_posts, get_top_users
+)
+
+@app.route('/stats/post/<post_id>', methods=['GET'])
+def get_post_statistics(post_id):
+    current_user_or_error, code = get_user_from_token(request)
+    if code != 200:
+        return make_response(current_user_or_error, code)
+
+    stats = get_post_stats(post_id)
+    return jsonify(stats)
+
+@app.route('/stats/post/<post_id>/views', methods=['GET'])
+def get_post_views_dynamics(post_id):
+    current_user_or_error, code = get_user_from_token(request)
+    if code != 200:
+        return make_response(current_user_or_error, code)
+
+    dynamics = get_view_dynamics(post_id)
+    return jsonify({'post_id': post_id, 'dynamics': dynamics})
+
+@app.route('/stats/post/<post_id>/likes', methods=['GET'])
+def get_post_likes_dynamics(post_id):
+    current_user_or_error, code = get_user_from_token(request)
+    if code != 200:
+        return make_response(current_user_or_error, code)
+
+    dynamics = get_like_dynamics(post_id)
+    return jsonify({'post_id': post_id, 'dynamics': dynamics})
+
+@app.route('/stats/post/<post_id>/comments', methods=['GET'])
+def get_post_comments_dynamics(post_id):
+    current_user_or_error, code = get_user_from_token(request)
+    if code != 200:
+        return make_response(current_user_or_error, code)
+
+    dynamics = get_comment_dynamics(post_id)
+    return jsonify({'post_id': post_id, 'dynamics': dynamics})
+
+@app.route('/stats/top/posts', methods=['GET'])
+def get_top_posts_stats():
+    current_user_or_error, code = get_user_from_token(request)
+    if code != 200:
+        return make_response(current_user_or_error, code)
+
+    metric = request.args.get('metric', 'view')
+    if metric not in ['view', 'like', 'comment']:
+        return jsonify({'error': 'Invalid metric. Use "view", "like" or "comment"'}), 400
+
+    top_posts = get_top_posts(metric)
+    return jsonify({'metric': metric, 'top_posts': top_posts})
+
+@app.route('/stats/top/users', methods=['GET'])
+def get_top_users_stats():
+    current_user_or_error, code = get_user_from_token(request)
+    if code != 200:
+        return make_response(current_user_or_error, code)
+
+    metric = request.args.get('metric', 'view')
+    if metric not in ['view', 'like', 'comment']:
+        return jsonify({'error': 'Invalid metric. Use "view", "like" or "comment"'}), 400
+
+    top_users = get_top_users(metric)
+    return jsonify({'metric': metric, 'top_users': top_users})
+
 
 
 if __name__ == '__main__':
