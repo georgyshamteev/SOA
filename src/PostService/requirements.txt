@@ -4,4 +4,4 @@ grpcio
 grpcio-tools
 python-dotenv==0.19.0
 kafka-python==2.0.2
-protobuf==6.30.0
+# protobuf==6.30.0
