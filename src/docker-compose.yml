@@ -32,6 +32,46 @@ services:
     volumes:
       - ./Broker/kafka_producer.py:/UserService/kafka_producer.py
 
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    environment:
+      - CLICKHOUSE_DB=social_network
+      - CLICKHOUSE_USER=stats_user
+      - CLICKHOUSE_PASSWORD=stats_password
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+    ports:
+      - "8123:8123"
+      - "14444:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - stats_service_network
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  statistics_service:
+    build: ./StatisticsService
+    container_name: statistics_service
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "50052:50052"
+    networks:
+      - stats_service_network
+      - kafka_network
+      - proxy_network
 
   postservice_db:
     image: postgres:latest
@@ -164,7 +204,10 @@ networks:
     driver: bridge
   kafka_network:
     driver: bridge
+  stats_service_network:
+    driver: bridge
 
 volumes:
   userservice_postgres_data:
   postservice_postgres_data:
+  clickhouse_data:

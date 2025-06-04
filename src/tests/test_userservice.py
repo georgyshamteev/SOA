@@ -1,3 +1,4 @@
+from time import sleep
 import requests
 import pytest
 import warnings
@@ -95,7 +96,7 @@ def test_create_post():
         "is_private": False,
         "tags": ["test", "pytest"]
     }
-    
+
     response = requests.post(f"{BASE_URL}/posts", json=post_data, cookies=get_cookie("user1"))
     assert response.status_code == 201
     data = response.json()
@@ -121,7 +122,7 @@ def test_update_post():
         "is_private": True,
         "tags": ["updated", "test"]
     }
-    
+
     response = requests.put(f"{BASE_URL}/posts/{post_id}", json=update_data, cookies=get_cookie("user1"))
     assert response.status_code == 200
     data = response.json()
@@ -135,14 +136,14 @@ def test_delete_post():
     assert response.status_code == 200
     data = response.json()
     assert data["success"] == True
-    
+
     response = requests.get(f"{BASE_URL}/posts/{post_id}", cookies=get_cookie("user1"))
     assert response.status_code != 200
 
 def test_list_posts():
     for _ in range(3):
         test_create_post()
-    
+
     response = requests.get(f"{BASE_URL}/posts?page=1&page_size=10", cookies=get_cookie("user1"))
     assert response.status_code == 200
     data = response.json()
@@ -159,13 +160,13 @@ def test_private_post_visibility():
         "is_private": True,
         "tags": ["private", "test"]
     }
-    
+
     response = requests.post(f"{BASE_URL}/posts", json=post_data, cookies=get_cookie("user1"))
     post_id = response.json()["id"]
-    
+
     response = requests.get(f"{BASE_URL}/posts/{post_id}", cookies=get_cookie("user1"))
     assert response.status_code == 200
-    
+
     response = requests.get(f"{BASE_URL}/posts/{post_id}", cookies=get_cookie("user2"))
     assert response.status_code != 200
 
@@ -176,12 +177,24 @@ def test_filter_by_tag():
         "description": "This post has a unique tag",
         "tags": [tag]
     }
-    
+
     requests.post(f"{BASE_URL}/posts", json=post_data, cookies=get_cookie("user1"))
-    
+
     response = requests.get(f"{BASE_URL}/posts?tag={tag}", cookies=get_cookie("user1"))
     assert response.status_code == 200
     data = response.json()
     assert len(data["posts"]) >= 1
     assert any(tag in post["tags"] for post in data["posts"])
 
+
+def test_get_stats():
+    post_id = test_create_post()
+
+    response = requests.get(f"{BASE_URL}/posts/{post_id}", cookies=get_cookie("user2"))
+    assert response.status_code == 200
+    sleep(1)
+    response = requests.get(f"{BASE_URL}/stats/post/{post_id}", cookies=get_cookie("user1"))
+    assert response.status_code == 200
+
+    data = response.json()
+    print(data)
